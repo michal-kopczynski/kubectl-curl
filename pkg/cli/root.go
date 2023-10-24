@@ -22,13 +22,14 @@ func RootCmd(version string) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "curl [plugin options] -- [curl options]",
+		Use: `kubectl curl [curl options]
+  kubectl curl [plugin options] -- [curl options]`,
 		Short: "Executes a curl command from a dedicated Kubernetes pod",
 		Example: `# Execute a curl command using default plugin options.
 kubectl curl -i http://httpbin/ip
 
-# Execute a curl command with custom plugin options. curl options commes after '--'. For example to specify namespace in which curl pod is created:
-kubectl curl --namespace foo -- -i http://httpbin/ip`,
+# Execute a curl command with custom plugin options. curl options commes after '--'.
+kubectl curl -v -n foo -- -i http://httpbin/ip`,
 		SilenceUsage: true,
 		Version:      version,
 		RunE: func(cmd *cobra.Command, args []string) error {
