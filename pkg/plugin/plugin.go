@@ -8,10 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/michal-kopczynski/kubectl-curl/pkg/pod"
+	"github.com/michal-kopczynski/kubectl-curl/pkg/apis"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+)
+
+const (
+	image = "curlimages/curl:8.4.0"
 )
 
 type Opts struct {
@@ -23,7 +27,7 @@ type Opts struct {
 	Timeout    int
 }
 
-func getKubeconfig(kubeconfig string) string {
+func GetKubeconfig(kubeconfig string) string {
 	if kubeconfig != "" {
 		return kubeconfig
 	} else if kubeconfigEnv, exists := os.LookupEnv("KUBECONFIG"); exists {
@@ -40,7 +44,7 @@ func RunPlugin(logger *log.Logger, opts *Opts, args []string) error {
 	curlCommand := "curl " + strings.Join(args, " ")
 	timeout := time.Duration(opts.Timeout) * time.Second
 
-	kubeconfig := getKubeconfig(opts.Kubeconfig)
+	kubeconfig := GetKubeconfig(opts.Kubeconfig)
 	logger.Printf("Using kubeconfig: %s\n", kubeconfig)
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -53,7 +57,15 @@ func RunPlugin(logger *log.Logger, opts *Opts, args []string) error {
 		return fmt.Errorf("error creating clientset: %w", err)
 	}
 
-	pod := pod.New(clientset, config, logger, opts.Namespace, opts.PodName)
+	pod := apis.NewPod(
+		clientset,
+		config,
+		logger,
+		image,
+		opts.Namespace,
+		opts.PodName,
+		[]string{"sleep", "infinity"},
+		0)
 
 	podExists, err := pod.IsCreated()
 	if err != nil {

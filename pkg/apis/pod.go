@@ -1,4 +1,4 @@
-package pod
+package apis
 
 import (
 	"context"
@@ -19,24 +19,30 @@ type Pod struct {
 	clientset *kubernetes.Clientset
 	config    *rest.Config
 	logger    *log.Logger
+	image     string
 	namespace string
-	podName   string
+	name      string
+	command   []string
+	port      int32
 }
 
-func New(clientset *kubernetes.Clientset, config *rest.Config, logger *log.Logger, namespace string, podName string) *Pod {
+func NewPod(clientset *kubernetes.Clientset, config *rest.Config, logger *log.Logger, image string, namespace string, name string, command []string, port int32) *Pod {
 	return &Pod{
 		clientset: clientset,
 		config:    config,
 		logger:    logger,
+		image:     image,
 		namespace: namespace,
-		podName:   podName,
+		name:      name,
+		command:   command,
+		port:      port,
 	}
 }
 
 func (p *Pod) IsCreated() (bool, error) {
 	podsClient := p.clientset.CoreV1().Pods(p.namespace)
 
-	_, err := podsClient.Get(context.TODO(), p.podName, metav1.GetOptions{})
+	_, err := podsClient.Get(context.TODO(), p.name, metav1.GetOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return false, nil
@@ -52,17 +58,31 @@ func (p *Pod) Create() error {
 
 	pod := &apiv1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: p.podName,
+			Name: p.name,
+			Labels: map[string]string{
+				"app": p.name,
+			},
 		},
 		Spec: apiv1.PodSpec{
 			Containers: []apiv1.Container{
 				{
-					Name:    "curl",
-					Image:   "curlimages/curl",
-					Command: []string{"sleep", "infinity"},
+					Name:  p.name,
+					Image: p.image,
 				},
 			},
 		},
+	}
+
+	if len(p.command) != 0 {
+		pod.Spec.Containers[0].Command = p.command
+	}
+
+	if p.port != 0 {
+		pod.Spec.Containers[0].Ports = []apiv1.ContainerPort{
+			{
+				ContainerPort: p.port,
+			},
+		}
 	}
 
 	_, err := podsClient.Create(context.TODO(), pod, metav1.CreateOptions{})
@@ -71,14 +91,14 @@ func (p *Pod) Create() error {
 		return fmt.Errorf("failed to create pod: %w", err)
 	}
 
-	p.logger.Printf("Pod \"%s\" created successfully in namespace \"%s\".\n", p.podName, p.namespace)
+	p.logger.Printf("Pod \"%s\" created successfully in namespace \"%s\".\n", p.name, p.namespace)
 
 	return nil
 }
 
 func (p *Pod) WaitForReady(timeout time.Duration) error {
 	watch, err := p.clientset.CoreV1().Pods(p.namespace).Watch(context.TODO(), metav1.ListOptions{
-		FieldSelector: "metadata.name=" + p.podName,
+		FieldSelector: "metadata.name=" + p.name,
 	})
 	if err != nil {
 		return fmt.Errorf("Failed to watch pod: %w", err)
@@ -108,11 +128,11 @@ func (p *Pod) ExecuteCommand(command string, timeout time.Duration) (string, err
 	execRequest := p.clientset.CoreV1().RESTClient().
 		Post().
 		Resource("pods").
-		Name(p.podName).
+		Name(p.name).
 		Namespace(p.namespace).
 		SubResource("exec").
 		VersionedParams(&apiv1.PodExecOptions{
-			Container: "curl",
+			Container: p.name,
 			Command:   strings.Split(command, " "),
 			Stdout:    true,
 			Stderr:    true,
@@ -153,7 +173,7 @@ func (p *Pod) Delete() error {
 		PropagationPolicy: &deletePolicy,
 	}
 
-	err := podsClient.Delete(context.TODO(), p.podName, *deleteOptions)
+	err := podsClient.Delete(context.TODO(), p.name, *deleteOptions)
 	if err != nil {
 		return fmt.Errorf("Failed to delete pod: %w", err)
 	}

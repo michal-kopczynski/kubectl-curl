@@ -4,10 +4,10 @@ import (
 	"io"
 	"log"
 	"os"
+	"slices"
 
 	"github.com/michal-kopczynski/kubectl-curl/pkg/plugin"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 )
 
 func RootCmd(version string) *cobra.Command {
