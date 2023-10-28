@@ -14,6 +14,7 @@ func RootCmd(version string) *cobra.Command {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	opts := &plugin.Opts{
 		Kubeconfig: "",
+		Image:      "curlimages/curl:8.4.0",
 		Namespace:  "default",
 		PodName:    "curl",
 		Cleanup:    false,
@@ -42,6 +43,7 @@ kubectl curl -v -n foo -- -i http://httpbin/ip`,
 
 	if slices.Contains(os.Args, "--") || slices.Contains(os.Args, "--help") {
 		cmd.Flags().StringVar(&opts.Kubeconfig, "kubeconfig", opts.Kubeconfig, "path to kubeconfig file")
+		cmd.Flags().StringVarP(&opts.Image, "image", "i", opts.Image, "docker image with curl tool")
 		cmd.Flags().StringVarP(&opts.Namespace, "namespace", "n", opts.Namespace, "namespace in which curl pod will be created")
 		cmd.Flags().StringVar(&opts.PodName, "name", opts.PodName, "curl pod name")
 		cmd.Flags().BoolVarP(&opts.Cleanup, "cleanup", "c", opts.Cleanup, "delete curl pod at the end")

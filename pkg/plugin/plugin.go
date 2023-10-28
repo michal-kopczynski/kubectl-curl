@@ -14,12 +14,9 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-const (
-	image = "curlimages/curl:8.4.0"
-)
-
 type Opts struct {
 	Kubeconfig string
+	Image      string
 	Namespace  string
 	PodName    string
 	Cleanup    bool
@@ -61,7 +58,7 @@ func RunPlugin(logger *log.Logger, opts *Opts, args []string) error {
 		clientset,
 		config,
 		logger,
-		image,
+		opts.Image,
 		opts.Namespace,
 		opts.PodName,
 		[]string{"sleep", "infinity"},
