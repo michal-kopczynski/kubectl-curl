@@ -14,6 +14,17 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+type PluginKind string
+
+const (
+	Curl    PluginKind = "curl"
+	Grpcurl            = "grpcurl"
+)
+
+func (p PluginKind) String() string {
+	return string(p)
+}
+
 type Opts struct {
 	Kubeconfig string
 	Image      string
@@ -37,8 +48,8 @@ func GetKubeconfig(kubeconfig string) string {
 	return ""
 }
 
-func RunPlugin(logger *log.Logger, opts *Opts, args []string) error {
-	curlCommand := "curl " + strings.Join(args, " ")
+func RunPlugin(kind PluginKind, logger *log.Logger, opts *Opts, args []string) error {
+	curlCommand := kind.String() + " " + strings.Join(args, " ")
 	timeout := time.Duration(opts.Timeout) * time.Second
 
 	kubeconfig := GetKubeconfig(opts.Kubeconfig)
@@ -66,30 +77,30 @@ func RunPlugin(logger *log.Logger, opts *Opts, args []string) error {
 
 	podExists, err := pod.IsCreated()
 	if err != nil {
-		return fmt.Errorf("error checking if pod exists: %w", err)
+		return fmt.Errorf("error checking if \"%s\" exists: %w", opts.PodName, err)
 	}
 
 	if !podExists {
 		if err := pod.Create(); err != nil {
-			return fmt.Errorf("error creating curl pod: %w", err)
+			return fmt.Errorf("error creating \"%s\" pod: %w", opts.PodName, err)
 		}
 	} else {
 		logger.Printf("Pod \"%s\" already exists.", opts.PodName)
 	}
 
 	if err := pod.WaitForReady(timeout); err != nil {
-		return fmt.Errorf("error waiting for pod readiness: %vw", err)
+		return fmt.Errorf("error waiting for \"%s\" readiness: %w", opts.PodName, err)
 	}
 
 	output, err := pod.ExecuteCommand(curlCommand, timeout)
 	if err != nil {
-		return fmt.Errorf("error executing curl inside pod: %w", err)
+		return fmt.Errorf("error executing command inside \"%s\" pod: %w", opts.PodName, err)
 	}
 	fmt.Println(output)
 
 	if opts.Cleanup {
 		if err := pod.Delete(); err != nil {
-			return fmt.Errorf("error deleting curl pod: %w", err)
+			return fmt.Errorf("error deleting \"%s\" pod: %w", opts.PodName, err)
 		}
 	}
 

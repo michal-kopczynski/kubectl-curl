@@ -10,43 +10,50 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func RootCmd(version string) *cobra.Command {
+type Config struct {
+	PluginKind     plugin.PluginKind
+	Version        string
+	DefaultImage   string
+	DefaultPodName string
+	ExampleUsage   string
+}
+
+func RootCmd(config Config) *cobra.Command {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	opts := &plugin.Opts{
 		Kubeconfig: "",
-		Image:      "curlimages/curl:8.4.0",
+		Image:      config.DefaultImage,
 		Namespace:  "default",
-		PodName:    "curl",
+		PodName:    config.DefaultPodName,
 		Cleanup:    false,
 		Verbose:    false,
 		Timeout:    30,
 	}
 
+	pluginName := config.PluginKind.String()
 	cmd := &cobra.Command{
-		Use: `kubectl curl [curl options]
-  kubectl curl [plugin options] -- [curl options]`,
-		Short: "Executes a curl command from a dedicated Kubernetes pod",
-		Example: `# Execute a curl command using default plugin options.
-kubectl curl -i http://httpbin/ip
-
-# Execute a curl command with custom plugin options. curl options commes after '--'.
-kubectl curl -v -n foo -- -i http://httpbin/ip`,
+		Use: `kubectl ` + pluginName + ` [` + pluginName + ` options]
+  kubectl ` + pluginName + ` [plugin flags] -- [` + pluginName + ` options]`,
+		Short:        "Executes a " + pluginName + " command from a dedicated Kubernetes pod",
+		Example:      config.ExampleUsage,
 		SilenceUsage: true,
-		Version:      version,
+		Version:      config.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !opts.Verbose {
 				logger.SetOutput(io.Discard)
 			}
-			return plugin.RunPlugin(logger, opts, args)
+			return plugin.RunPlugin(config.PluginKind, logger, opts, args)
 		},
 	}
 
+	cmd.DisableFlagsInUseLine = true
+
 	if slices.Contains(os.Args, "--") || slices.Contains(os.Args, "--help") {
 		cmd.Flags().StringVar(&opts.Kubeconfig, "kubeconfig", opts.Kubeconfig, "path to kubeconfig file")
-		cmd.Flags().StringVarP(&opts.Image, "image", "i", opts.Image, "docker image with curl tool")
-		cmd.Flags().StringVarP(&opts.Namespace, "namespace", "n", opts.Namespace, "namespace in which curl pod will be created")
-		cmd.Flags().StringVar(&opts.PodName, "name", opts.PodName, "curl pod name")
-		cmd.Flags().BoolVarP(&opts.Cleanup, "cleanup", "c", opts.Cleanup, "delete curl pod at the end")
+		cmd.Flags().StringVarP(&opts.Image, "image", "i", opts.Image, "docker image with "+pluginName+" tool")
+		cmd.Flags().StringVarP(&opts.Namespace, "namespace", "n", opts.Namespace, "namespace in which "+pluginName+" pod will be created")
+		cmd.Flags().StringVar(&opts.PodName, "name", opts.PodName, pluginName+" pod name")
+		cmd.Flags().BoolVarP(&opts.Cleanup, "cleanup", "c", opts.Cleanup, "delete "+pluginName+" pod at the end")
 		cmd.Flags().BoolVarP(&opts.Verbose, "verbose", "v", opts.Verbose, "explain what is being done")
 		cmd.Flags().IntVarP(&opts.Timeout, "timeout", "t", opts.Timeout, "the timeout of plugin operations in seconds")
 	} else {
@@ -56,8 +63,8 @@ kubectl curl -v -n foo -- -i http://httpbin/ip`,
 	return cmd
 }
 
-func InitAndExecute(version string) error {
-	if err := RootCmd(version).Execute(); err != nil {
+func InitAndExecute(config Config) error {
+	if err := RootCmd(config).Execute(); err != nil {
 		return err
 	}
 	return nil

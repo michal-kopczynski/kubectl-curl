@@ -1,40 +1,56 @@
-# kubectl-curl
+# kubectl-curl and kubectl-grpcurl
 
-Kubectl plugin that executes a curl command from a dedicated Kubernetes pod.
+Kubectl plugins that execute curl and grpcurl commands from a dedicated Kubernetes pod.
 
-Created for testing routing rules and network policies within a cluster, but it's also suitable for general API testing and data transfer.
-The plugin simplifies these tasks by handling the deployment of a pod with the curl tool, then executing the curl command from within that pod.
+Created for testing routing rules and network policies within a cluster, but they are also suitable for general API testing and data transfer.
+These plugins simplify these tasks by handling the deployment of pods with the curl/grpcurl tools and then executing the curl/grpcurl commands from within those pods.
 
 ## Installation
 
-The latest version of kubectl-curl plugin can be installed using the following Go command:
+The latest versions of kubectl-curl and kubectl-grpcurl plugins can be installed using the following Go command:
 
 ```
-go install github.com/michal-kopczynski/kubectl-curl@latest
+go install github.com/michal-kopczynski/kubectl-curl/...@latest
 ```
 
-Make sure that your `$GOPATH/bin` is included in your system's `PATH` to invoke the plugin from kubectl.
+Make sure that your `$GOPATH/bin` is included in your system's `PATH` to invoke the plugins from kubectl.
+
+To install only kubectl curl plugin:
+```
+go install github.com/michal-kopczynski/kubectl-curl/cmd/kubectl-curl@latest
+```
+
+To install only kubectl grpcurl plugin:
+```
+go install github.com/michal-kopczynski/kubectl-curl/cmd/kubectl-grpcurl@latest
+```
 
 ## Usage
 
-The kubectl-curl command follows the standard syntax of curl. To execute plugin with default plugin options:
+The kubectl-curl and kubectl-grpcurl commands follow the standard syntax of curl/grpcurl.
+
+To execute plugins with default options:
 ```
 kubectl curl [curl options]
+kubectl grpcurl [grpcurl options]
 ```
 
-To execute plugin with custom plugin options:
+To execute plugins with custom options:
 ```
-kubectl curl [plugin options] -- [curl options]
+kubectl curl [plugin flags] -- [curl options]
+kubectl grpcurl [plugin flags] -- [grpcurl options]
 ```
-The `--` ensures separation between kubectl-curl plugin options and the standard curl options.
+The `--` ensures separation between kubectl-curl/kubectl-grpcurl plugins flags and the standard curl/grpcurl options.
 
 ## Examples
-Execute a curl command using default plugin options:
+Execute a curl/grpcurl command using default options:
 ```
 kubectl curl -i http://httpbin/ip
+kubectl grpcurl -d '{"greeting":"world"}' -plaintext grpcbin:80 hello.HelloService.SayHello
 ```
 
-Execute a curl command with custom plugin options:
+Execute a curl/grpcurl command with custom options i.e:
 ```
-kubectl curl -v -n foo -- -i http://httpbin/ip
+kubectl curl --verbose --namespace foo -- -i http://httpbin/ip
+kubectl grpcurl --verbose --namespace foo -- -d '{"greeting":"world"}' -plaintext grpcbin:80 hello.HelloService.SayHello
 ```

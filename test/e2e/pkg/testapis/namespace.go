@@ -37,6 +37,7 @@ func (p *Namespace) Create() error {
 		return fmt.Errorf("failed to create namespace: %v", err)
 	}
 
+	p.logger.Printf("Namespace \"%s\" created successfully.\n", p.name)
 	return nil
 }
 

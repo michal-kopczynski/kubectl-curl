@@ -1,4 +1,4 @@
-VERSION = v0.1.0
+VERSION = v0.2.0
 
 lint:
 	@go fmt ./... && go vet ./...
@@ -9,13 +9,7 @@ test:
 
 .PHONY: test-e2e
 test-e2e:
-	@go test -v -count=1 ./test/e2e --race
-
-build: clean
-	@go build  -ldflags="-s -w -X main.version=$(VERSION)" -o bin/kubectl-curl .
+	@go test -count=1 ./test/e2e/... --race
 
 install:
-	@go install -ldflags="-s -w -X main.version=$(VERSION)"
-
-clean:
-	@ rm -rf bin
+	@go install -ldflags="-s -w -X main.version=$(VERSION)" ./...

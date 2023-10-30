@@ -83,7 +83,7 @@ func setup(t *testing.T) *TestState {
 		t.Fatalf("Error creating httpbin pod: %v", err)
 	}
 
-	if err := httpbinPod.WaitForReady(15 * time.Second); err != nil {
+	if err := httpbinPod.WaitForReady(30 * time.Second); err != nil {
 		t.Fatalf("Error waiting for httpbin pod readiness: %v", err)
 	}
 
@@ -153,6 +153,7 @@ func TestKubectlCurl(t *testing.T) {
 			}
 
 			output := out.String()
+			t.Log(output)
 
 			for _, expected := range tt.expectedInOutput {
 				if !strings.Contains(output, expected) {
