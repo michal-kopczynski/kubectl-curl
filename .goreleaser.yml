@@ -7,6 +7,8 @@ builds:
 - id: "kubectl-curl"
   main: ./cmd/kubectl-curl/main.go
   binary: kubectl-curl
+  env:
+      - CGO_ENABLED=0
   goos:
     - linux
     - darwin
@@ -17,6 +19,8 @@ builds:
 - id: "kubectl-grpcurl"
   main: ./cmd/kubectl-grpcurl/main.go
   binary: kubectl-grpcurl
+  env:
+      - CGO_ENABLED=0
   goos:
     - linux
     - darwin
