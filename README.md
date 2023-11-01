@@ -7,6 +7,12 @@ These plugins simplify these tasks by handling the deployment of pods with the c
 
 ## Installation
 
+### Using release binaries
+
+The latest release binaries for kubectl-curl and kubectl-grpcurl plugins can be downloaded from the [GitHub releases page](https://github.com/michal-kopczynski/kubectl-curl/releases/latest).
+
+### Using go install
+
 The latest versions of kubectl-curl and kubectl-grpcurl plugins can be installed using the following Go command:
 
 ```
@@ -29,7 +35,7 @@ go install github.com/michal-kopczynski/kubectl-curl/cmd/kubectl-grpcurl@latest
 
 The kubectl-curl and kubectl-grpcurl commands follow the standard syntax of curl/grpcurl.
 
-To execute plugins with default options:
+To execute plugins with default options (deploy curl/grpcurl pod in default namespace):
 ```
 kubectl curl [curl options]
 kubectl grpcurl [grpcurl options]
