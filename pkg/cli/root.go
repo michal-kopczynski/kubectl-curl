@@ -37,7 +37,7 @@ func RootCmd(config Config) *cobra.Command {
 		Short:        "Executes a " + pluginName + " command from a dedicated Kubernetes pod",
 		Example:      config.ExampleUsage,
 		SilenceUsage: true,
-		Version:      config.Version,
+		Version:      "kubect-" + config.PluginKind.String() + " version: " + config.Version,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !opts.Verbose {
 				logger.SetOutput(io.Discard)
@@ -46,9 +46,11 @@ func RootCmd(config Config) *cobra.Command {
 		},
 	}
 
+	cmd.SetVersionTemplate(`{{printf "%s\n" .Version}}`)
+
 	cmd.DisableFlagsInUseLine = true
 
-	if slices.Contains(os.Args, "--") || slices.Contains(os.Args, "--help") {
+	if slices.Contains(os.Args, "--") || slices.Contains(os.Args, "--help") || slices.Contains(os.Args, "--version") {
 		cmd.Flags().StringVar(&opts.Kubeconfig, "kubeconfig", opts.Kubeconfig, "path to kubeconfig file")
 		cmd.Flags().StringVarP(&opts.Image, "image", "i", opts.Image, "docker image with "+pluginName+" tool")
 		cmd.Flags().StringVarP(&opts.Namespace, "namespace", "n", opts.Namespace, "namespace in which "+pluginName+" pod will be created")

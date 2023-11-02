@@ -109,7 +109,7 @@ func teardown(t *testing.T, testState *TestState) {
 	}
 }
 
-func TestKubectlCurl(t *testing.T) {
+func TestKubectlGrpcurl(t *testing.T) {
 	testState := setup(t)
 	defer teardown(t, testState)
 

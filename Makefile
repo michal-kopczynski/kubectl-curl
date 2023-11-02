@@ -1,5 +1,3 @@
-VERSION = v0.2.0
-
 lint:
 	@go fmt ./... && go vet ./...
 
@@ -12,4 +10,4 @@ test-e2e:
 	@go test -count=1 ./test/e2e/... --race
 
 install:
-	@go install -ldflags="-s -w -X main.version=$(VERSION)" ./...
+	@go install -ldflags="-s -w" ./...
