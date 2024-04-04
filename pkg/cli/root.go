@@ -52,6 +52,7 @@ func RootCmd(config Config) *cobra.Command {
 
 	if slices.Contains(os.Args, "--") || slices.Contains(os.Args, "--help") || slices.Contains(os.Args, "--version") {
 		cmd.Flags().StringVar(&opts.Kubeconfig, "kubeconfig", opts.Kubeconfig, "path to kubeconfig file")
+		cmd.Flags().StringVar(&opts.Context, "context", opts.Context, "the name of the kubeconfig context to use")
 		cmd.Flags().StringVarP(&opts.Image, "image", "i", opts.Image, "docker image with "+pluginName+" tool")
 		cmd.Flags().StringVarP(&opts.Namespace, "namespace", "n", opts.Namespace, "namespace in which "+pluginName+" pod will be created")
 		cmd.Flags().StringVar(&opts.PodName, "name", opts.PodName, pluginName+" pod name")

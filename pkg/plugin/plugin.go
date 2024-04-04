@@ -27,6 +27,7 @@ func (p PluginKind) String() string {
 
 type Opts struct {
 	Kubeconfig string
+	Context    string
 	Image      string
 	Namespace  string
 	PodName    string
@@ -55,7 +56,14 @@ func RunPlugin(kind PluginKind, logger *log.Logger, opts *Opts, args []string) e
 	kubeconfig := GetKubeconfig(opts.Kubeconfig)
 	logger.Printf("Using kubeconfig: %s\n", kubeconfig)
 
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	var configOverrides clientcmd.ConfigOverrides
+	if opts.Context != "" {
+		configOverrides.CurrentContext = opts.Context
+	}
+	config, err := clientcmd.
+		NewNonInteractiveDeferredLoadingClientConfig(
+			&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig},
+			&configOverrides).ClientConfig()
 	if err != nil {
 		return fmt.Errorf("error building kubeconfig: %w", err)
 	}

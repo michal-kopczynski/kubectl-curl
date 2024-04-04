@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/michal-kopczynski/kubectl-curl/pkg/cli"
@@ -23,7 +22,6 @@ kubectl curl -i http://httpbin/ip
 kubectl curl -v -n foo -- -i http://httpbin/ip`,
 	}
 	if err := cli.InitAndExecute(c); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
